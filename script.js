@@ -5,7 +5,6 @@ const zoomInput = document.getElementById('zoom');
 const zoomVal = document.getElementById('zoomVal');
 const downloadBtn = document.getElementById('downloadBtn');
 const resetBtn = document.getElementById('resetBtn');
-const overlay = document.getElementById('overlay');
 const controls = document.getElementById('controls');
 const hint = document.getElementById('hint');
 
@@ -18,36 +17,10 @@ let imgY = canvas.height / 2;
 let imgScale = 1;
 let isDragging = false;
 let startX, startY;
-let locked = false;
 
 frameImage.onload = () => draw();
 
-function openFile() {
-  if (locked) return;
-  locked = true;
-  uploadInput.disabled = true;
-  uploadInput.click();
-}
-
-// Prevent double open — re-enable after file dialog closes
-uploadInput.addEventListener('cancel', () => {
-  locked = false;
-  uploadInput.disabled = false;
-});
-
-overlay.addEventListener('click', openFile);
-
-// Drag & drop
-canvas.addEventListener('dragover', (e) => e.preventDefault());
-canvas.addEventListener('drop', (e) => {
-  e.preventDefault();
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) loadFile(file);
-});
-
 uploadInput.addEventListener('change', (e) => {
-  uploadInput.disabled = false;
-  locked = false;
   if (e.target.files[0]) loadFile(e.target.files[0]);
 });
 
@@ -62,9 +35,7 @@ function loadFile(file) {
       imgScale = canvas.width / Math.min(userImage.width, userImage.height);
       zoomInput.value = imgScale;
       zoomVal.textContent = Math.round(imgScale * 100) + '%';
-      overlay.classList.add('hide');
       controls.style.display = '';
-      canvas.style.cursor = 'grab';
       hint.textContent = 'ទាញរូបថតដើម្បីផ្លាស់ទី · ប្រើរបារពង្រីក';
       draw();
     };
@@ -80,7 +51,6 @@ canvas.addEventListener('mousedown', (e) => {
   const rect = canvas.getBoundingClientRect();
   startX = (e.clientX - rect.left) * (canvas.width / rect.width) - imgX;
   startY = (e.clientY - rect.top) * (canvas.height / rect.height) - imgY;
-  canvas.style.cursor = 'grabbing';
   e.preventDefault();
 });
 
@@ -92,10 +62,7 @@ canvas.addEventListener('mousemove', (e) => {
   draw();
 });
 
-window.addEventListener('mouseup', () => {
-  isDragging = false;
-  if (userImage) canvas.style.cursor = 'grab';
-});
+window.addEventListener('mouseup', () => { isDragging = false; });
 
 // Touch drag
 canvas.addEventListener('touchstart', (e) => {
@@ -148,9 +115,7 @@ resetBtn.addEventListener('click', () => {
   imgScale = 1;
   zoomInput.value = 1;
   zoomVal.textContent = '100%';
-  overlay.classList.remove('hide');
   controls.style.display = 'none';
-  canvas.style.cursor = 'move';
   uploadInput.value = '';
   hint.textContent = 'រូបភាពនៅពីក្រោយស៊ុម · ទាញដើម្បីផ្លាស់ទី';
   draw();

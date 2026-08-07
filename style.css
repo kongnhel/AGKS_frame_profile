@@ -32,7 +32,6 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Header */
 header {
   text-align: center;
   margin-bottom: 20px;
@@ -50,7 +49,6 @@ header h1 {
   font-weight: 700;
 }
 
-/* Card */
 .card {
   position: relative;
   border-radius: var(--radius);
@@ -59,73 +57,33 @@ header h1 {
   border: 1px solid var(--border);
 }
 
+.card input { display: none; }
+
 canvas {
   width: 100%;
   display: block;
-  cursor: move;
-}
-
-/* Overlay */
-.overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(8px);
-  cursor: pointer;
-  transition: opacity 0.3s;
-}
-
-.overlay.hide {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.overlay svg {
-  width: 40px;
-  height: 40px;
-  color: var(--dim);
-}
-
-.overlay p {
-  font-size: 0.9rem;
-  color: var(--dim);
-  font-weight: 600;
-}
-
-/* Toolbar */
-.toolbar {
-  margin-top: 16px;
-  text-align: center;
 }
 
 .upload-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 28px;
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px;
   background: var(--blue);
   color: #fff;
-  border-radius: 10px;
-  font-size: 0.95rem;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+  text-align: center;
   transition: background 0.2s;
-  user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .upload-btn:active { background: #1d4ed8; }
 
-.upload-btn svg { width: 18px; height: 18px; }
-
-.toolbar input { display: none; }
-
-/* Controls */
 .controls {
   margin-top: 16px;
   background: var(--card);
@@ -201,7 +159,6 @@ canvas {
 
 .btn.ghost:active { background: #e5e7eb; }
 
-/* Hint */
 .hint {
   text-align: center;
   font-size: 0.78rem;
