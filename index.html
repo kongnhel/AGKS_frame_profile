@@ -2,77 +2,50 @@
 <html lang="km">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AGKS Profile Frame</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="bg-shape bg-shape-1"></div>
-  <div class="bg-shape bg-shape-2"></div>
-  <div class="bg-shape bg-shape-3"></div>
 
   <div class="app">
     <header>
-      <div class="logo-row">
-        <div class="logo-icon-wrap">
-          <img class="logo-icon" src="logo.png" alt="AGKS">
-        </div>
-        <div>
-          <h1>ដាក់រូបថតចូលក្នុងស៊ុម</h1>
-          <p class="subtitle">Upload your photo and download with frame</p>
-        </div>
-      </div>
+      <img class="logo" src="logo.png" alt="AGKS">
+      <h1>ដាក់រូបថតក្នុងស៊ុម</h1>
     </header>
 
-    <main class="card">
-      <div class="canvas-wrap">
-        <canvas id="canvas" width="800" height="800"></canvas>
-        <div class="canvas-overlay" id="canvasOverlay">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span>ដាក់រូបថតរបស់អ្នក</span>
-        </div>
+    <div class="card">
+      <canvas id="canvas" width="800" height="800"></canvas>
+
+      <div class="overlay" id="overlay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>ដាក់រូបថតរបស់អ្នក</p>
       </div>
+    </div>
 
-      <div class="controls">
-        <div class="upload-row">
-          <label for="upload" class="btn btn-primary" id="uploadBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <span>ជ្រើសរើសរូបថត</span>
-          </label>
-          <input type="file" id="upload" accept="image/*" hidden>
-        </div>
+    <div class="toolbar" id="toolbar">
+      <label class="upload-btn" for="upload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="3"/></svg>
+        ជ្រើសរើសរូបថត
+      </label>
+      <input type="file" id="upload" accept="image/*">
+    </div>
 
-        <div class="slider-group" id="sliderGroup" style="display:none">
-          <label class="slider-label">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-            ទំហំរូបថត
-          </label>
-          <div class="slider-row">
-            <input type="range" id="zoom" min="0.2" max="3" step="0.01" value="1" class="slider">
-            <span class="slider-value" id="zoomVal">100%</span>
-          </div>
-        </div>
-
-        <div class="action-row" id="actionRow" style="display:none">
-          <button id="downloadBtn" class="btn btn-download">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span>Download រូបភាព</span>
-          </button>
-          <button id="resetBtn" class="btn btn-outline">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-            <span>Reset</span>
-          </button>
-        </div>
-
-        <p class="hint" id="hint">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hint-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          រូបភាពនៅពីក្រោយស៊ុម · ទាញដើម្បីផ្លាស់ទី · ប្រើរបារពង្រីក
-        </p>
+    <div class="controls" id="controls" style="display:none">
+      <div class="slider-wrap">
+        <input type="range" id="zoom" min="0.2" max="3" step="0.01" value="1">
+        <span id="zoomVal">100%</span>
       </div>
-    </main>
+      <div class="btn-row">
+        <button id="downloadBtn" class="btn green">Download</button>
+        <button id="resetBtn" class="btn ghost">Reset</button>
+      </div>
+    </div>
+
+    <p class="hint" id="hint">រូបភាពនៅពីក្រោយស៊ុម · ទាញដើម្បីផ្លាស់ទី</p>
   </div>
 
   <script src="script.js"></script>

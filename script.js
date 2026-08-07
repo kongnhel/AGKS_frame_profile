@@ -5,11 +5,9 @@ const zoomInput = document.getElementById('zoom');
 const zoomVal = document.getElementById('zoomVal');
 const downloadBtn = document.getElementById('downloadBtn');
 const resetBtn = document.getElementById('resetBtn');
+const overlay = document.getElementById('overlay');
+const controls = document.getElementById('controls');
 const hint = document.getElementById('hint');
-const canvasOverlay = document.getElementById('canvasOverlay');
-const sliderGroup = document.getElementById('sliderGroup');
-const actionRow = document.getElementById('actionRow');
-const uploadBtn = document.getElementById('uploadBtn');
 
 const frameImage = new Image();
 frameImage.src = 'frame.png';
@@ -20,29 +18,36 @@ let imgY = canvas.height / 2;
 let imgScale = 1;
 let isDragging = false;
 let startX, startY;
+let locked = false;
 
 frameImage.onload = () => draw();
 
 function openFile() {
+  if (locked) return;
+  locked = true;
+  uploadInput.disabled = true;
   uploadInput.click();
 }
 
-// Click overlay to upload
-canvasOverlay.addEventListener('click', openFile);
+// Prevent double open — re-enable after file dialog closes
+uploadInput.addEventListener('cancel', () => {
+  locked = false;
+  uploadInput.disabled = false;
+});
 
-// Upload button
-uploadBtn.addEventListener('click', openFile);
+overlay.addEventListener('click', openFile);
 
-// Drag and drop on canvas area
-const canvasWrap = document.querySelector('.canvas-wrap');
-canvasWrap.addEventListener('dragover', (e) => e.preventDefault());
-canvasWrap.addEventListener('drop', (e) => {
+// Drag & drop
+canvas.addEventListener('dragover', (e) => e.preventDefault());
+canvas.addEventListener('drop', (e) => {
   e.preventDefault();
   const file = e.dataTransfer.files[0];
   if (file && file.type.startsWith('image/')) loadFile(file);
 });
 
 uploadInput.addEventListener('change', (e) => {
+  uploadInput.disabled = false;
+  locked = false;
   if (e.target.files[0]) loadFile(e.target.files[0]);
 });
 
@@ -57,11 +62,10 @@ function loadFile(file) {
       imgScale = canvas.width / Math.min(userImage.width, userImage.height);
       zoomInput.value = imgScale;
       zoomVal.textContent = Math.round(imgScale * 100) + '%';
-      hint.textContent = 'ទាញរូបថតដើម្បីផ្លាស់ទី · ប្រើរបារពង្រីក · ចុច Download';
-      canvasOverlay.classList.add('hidden');
-      sliderGroup.style.display = '';
-      actionRow.style.display = '';
+      overlay.classList.add('hide');
+      controls.style.display = '';
       canvas.style.cursor = 'grab';
+      hint.textContent = 'ទាញរូបថតដើម្បីផ្លាស់ទី · ប្រើរបារពង្រីក';
       draw();
     };
     img.src = event.target.result;
@@ -126,7 +130,6 @@ zoomInput.addEventListener('input', (e) => {
 // Draw
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   if (userImage) {
     ctx.save();
     ctx.translate(imgX, imgY);
@@ -134,7 +137,6 @@ function draw() {
     ctx.drawImage(userImage, -userImage.width / 2, -userImage.height / 2);
     ctx.restore();
   }
-
   ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
 }
 
@@ -146,12 +148,11 @@ resetBtn.addEventListener('click', () => {
   imgScale = 1;
   zoomInput.value = 1;
   zoomVal.textContent = '100%';
-  hint.textContent = 'រូបភាពនៅពីក្រោយស៊ុម · ទាញដើម្បីផ្លាស់ទី · ប្រើរបារពង្រីក';
-  canvasOverlay.classList.remove('hidden');
-  sliderGroup.style.display = 'none';
-  actionRow.style.display = 'none';
+  overlay.classList.remove('hide');
+  controls.style.display = 'none';
   canvas.style.cursor = 'move';
   uploadInput.value = '';
+  hint.textContent = 'រូបភាពនៅពីក្រោយស៊ុម · ទាញដើម្បីផ្លាស់ទី';
   draw();
 });
 
