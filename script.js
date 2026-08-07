@@ -1,222 +1,155 @@
-const $ = (s) => document.querySelector(s);
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const uploadInput = document.getElementById('upload');
+const zoomInput = document.getElementById('zoom');
+const zoomVal = document.getElementById('zoomVal');
+const downloadBtn = document.getElementById('downloadBtn');
+const resetBtn = document.getElementById('resetBtn');
+const hint = document.getElementById('hint');
+const canvasOverlay = document.getElementById('canvasOverlay');
+const sliderGroup = document.getElementById('sliderGroup');
+const actionRow = document.getElementById('actionRow');
+const uploadBtn = document.getElementById('uploadBtn');
 
-const step1 = $('#step1');
-const step2 = $('#step2');
-const uploadZone = $('#uploadZone');
-const fileInput = $('#fileInput');
-const previewCanvas = $('#previewCanvas');
-const exportCanvas = $('#exportCanvas');
-const zoomSlider = $('#zoomSlider');
-const zoomValue = $('#zoomValue');
-const previewFrame = $('#previewFrame');
-const dragHint = $('#dragHint');
+const frameImage = new Image();
+frameImage.src = 'frame.png';
 
-const FRAME_SRC = 'frame.png';
-const CIRCLE = { xRatio: 0.5, yRatio: 0.465, radiusRatio: 0.305 };
-
-let frameImg = null;
-let userImg = null;
-let zoom = 1;
-let offsetX = 0, offsetY = 0;
+let userImage = null;
+let imgX = canvas.width / 2;
+let imgY = canvas.height / 2;
+let imgScale = 1;
 let isDragging = false;
-let dragStart = { x: 0, y: 0 };
-let offsetStart = { x: 0, y: 0 };
+let startX, startY;
 
-// Preload frame
-const frameLoad = new Promise((resolve) => {
-    frameImg = new Image();
-    frameImg.onload = () => resolve();
-    frameImg.src = FRAME_SRC;
-});
+frameImage.onload = () => draw();
 
-// --- Upload ---
-uploadZone.addEventListener('click', () => fileInput.click());
-uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadZone.classList.remove('dragover');
-    const f = e.dataTransfer.files[0];
-    if (f && f.type.startsWith('image/')) loadFile(f);
-});
-fileInput.addEventListener('change', (e) => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+// Click overlay to upload
+canvasOverlay.addEventListener('click', () => fileInput.click());
 
-function loadFile(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-            userImg = img;
-            resetState();
-            showStep2();
-        };
-        img.src = e.target.result;
+// Upload button
+uploadBtn.addEventListener('click', () => uploadInput.click());
+
+uploadInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    userImage = new Image();
+    userImage.onload = () => {
+      imgX = canvas.width / 2;
+      imgY = canvas.height / 2;
+      imgScale = canvas.width / Math.min(userImage.width, userImage.height);
+      zoomInput.value = imgScale;
+      zoomVal.textContent = Math.round(imgScale * 100) + '%';
+      hint.textContent = 'ទាញរូបថតដើម្បីផ្លាស់ទី · ប្រើរបារពង្រីក · ចុច Download';
+      canvasOverlay.classList.add('hidden');
+      sliderGroup.style.display = '';
+      actionRow.style.display = '';
+      draw();
     };
-    reader.readAsDataURL(file);
-}
-
-function resetState() {
-    zoom = 1;
-    offsetX = 0;
-    offsetY = 0;
-    zoomSlider.value = 100;
-    zoomValue.textContent = '100%';
-}
-
-// --- Step Navigation ---
-function showStep2() {
-    step1.classList.remove('active');
-    step2.classList.add('active');
-    frameLoad.then(() => renderPreview());
-}
-
-$('#backBtn').addEventListener('click', () => {
-    step2.classList.remove('active');
-    step1.classList.add('active');
+    userImage.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
 });
 
-$('#changePhotoBtn').addEventListener('click', () => {
-    step2.classList.remove('active');
-    step1.classList.add('active');
-    fileInput.value = '';
+// Drag
+canvas.addEventListener('mousedown', (e) => {
+  if (!userImage) return;
+  isDragging = true;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  startX = (e.clientX - rect.left) * scaleX - imgX;
+  startY = (e.clientY - rect.top) * scaleY - imgY;
+  canvas.style.cursor = 'grabbing';
 });
 
-$('#resetBtn').addEventListener('click', () => {
-    resetState();
-    renderPreview();
+canvas.addEventListener('mousemove', (e) => {
+  if (!isDragging || !userImage) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  imgX = (e.clientX - rect.left) * scaleX - startX;
+  imgY = (e.clientY - rect.top) * scaleY - startY;
+  draw();
 });
 
-// --- Zoom ---
-zoomSlider.addEventListener('input', () => {
-    zoom = parseInt(zoomSlider.value) / 100;
-    zoomValue.textContent = zoomSlider.value + '%';
-    renderPreview();
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  canvas.style.cursor = userImage ? 'grab' : 'move';
 });
 
-// --- Drag ---
-previewFrame.addEventListener('mousedown', startDrag);
-previewFrame.addEventListener('touchstart', startDrag, { passive: false });
+// Touch
+canvas.addEventListener('touchstart', (e) => {
+  if (!userImage) return;
+  isDragging = true;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const t = e.touches[0];
+  startX = (t.clientX - rect.left) * scaleX - imgX;
+  startY = (t.clientY - rect.top) * scaleY - imgY;
+  e.preventDefault();
+}, { passive: false });
 
-function startDrag(e) {
-    isDragging = true;
-    const pt = e.touches ? e.touches[0] : e;
-    dragStart = { x: pt.clientX, y: pt.clientY };
-    offsetStart = { x: offsetX, y: offsetY };
-    dragHint.style.opacity = '0';
-    e.preventDefault();
-}
+canvas.addEventListener('touchmove', (e) => {
+  if (!isDragging || !userImage) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const t = e.touches[0];
+  imgX = (t.clientX - rect.left) * scaleX - startX;
+  imgY = (t.clientY - rect.top) * scaleY - startY;
+  draw();
+  e.preventDefault();
+}, { passive: false });
 
-window.addEventListener('mousemove', onDrag);
-window.addEventListener('touchmove', onDrag, { passive: false });
+window.addEventListener('touchend', () => isDragging = false);
 
-function onDrag(e) {
-    if (!isDragging) return;
-    const pt = e.touches ? e.touches[0] : e;
-    const rect = previewFrame.getBoundingClientRect();
-    const scaleX = previewCanvas.width / rect.width;
-    const scaleY = previewCanvas.height / rect.height;
-    offsetX = offsetStart.x + (pt.clientX - dragStart.x) * scaleX;
-    offsetY = offsetStart.y + (pt.clientY - dragStart.y) * scaleY;
-    renderPreview();
-    e.preventDefault();
-}
+// Zoom
+zoomInput.addEventListener('input', (e) => {
+  imgScale = parseFloat(e.target.value);
+  zoomVal.textContent = Math.round(imgScale * 100) + '%';
+  draw();
+});
 
-window.addEventListener('mouseup', () => { isDragging = false; });
-window.addEventListener('touchend', () => { isDragging = false; });
+// Draw
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-// --- Render ---
-function renderPreview() {
-    if (!userImg || !frameImg) return;
-
-    const fw = frameImg.naturalWidth;
-    const fh = frameImg.naturalHeight;
-
-    previewCanvas.width = fw;
-    previewCanvas.height = fh;
-    const ctx = previewCanvas.getContext('2d');
-
-    const cx = fw * CIRCLE.xRatio;
-    const cy = fh * CIRCLE.yRatio;
-    const r = fw * CIRCLE.radiusRatio;
-
-    // Draw user photo clipped to circle
+  if (userImage) {
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.clip();
-
-    const baseSize = r * 2;
-    const imgAspect = userImg.naturalWidth / userImg.naturalHeight;
-    let sw, sh;
-    if (imgAspect > 1) {
-        sh = baseSize;
-        sw = sh * imgAspect;
-    } else {
-        sw = baseSize;
-        sh = sw / imgAspect;
-    }
-
-    sw *= zoom;
-    sh *= zoom;
-
-    const sx = cx - sw / 2 + offsetX;
-    const sy = cy - sh / 2 + offsetY;
-
-    ctx.drawImage(userImg, sx, sy, sw, sh);
+    ctx.translate(imgX, imgY);
+    ctx.scale(imgScale, imgScale);
+    ctx.drawImage(userImage, -userImage.width / 2, -userImage.height / 2);
     ctx.restore();
+  }
 
-    // Draw frame on top
-    ctx.drawImage(frameImg, 0, 0, fw, fh);
+  ctx.drawImage(frameImage, 0, 0, canvas.width, canvas.height);
 }
 
-// --- Download ---
-$('#downloadBtn').addEventListener('click', async () => {
-    if (!userImg || !frameImg) return;
+// Reset
+resetBtn.addEventListener('click', () => {
+  userImage = null;
+  imgX = canvas.width / 2;
+  imgY = canvas.height / 2;
+  imgScale = 1;
+  zoomInput.value = 1;
+  zoomVal.textContent = '100%';
+  hint.textContent = 'រូបភាពនៅពីក្រោយស៊ុម · ទាញដើម្បីផ្លាស់ទី · ប្រើរបារពង្រីក';
+  canvasOverlay.classList.remove('hidden');
+  sliderGroup.style.display = 'none';
+  actionRow.style.display = 'none';
+  uploadInput.value = '';
+  draw();
+});
 
-    await frameLoad;
-
-    const fw = frameImg.naturalWidth;
-    const fh = frameImg.naturalHeight;
-
-    exportCanvas.width = fw;
-    exportCanvas.height = fh;
-    const ctx = exportCanvas.getContext('2d');
-
-    const cx = fw * CIRCLE.xRatio;
-    const cy = fh * CIRCLE.yRatio;
-    const r = fw * CIRCLE.radiusRatio;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.clip();
-
-    const baseSize = r * 2;
-    const imgAspect = userImg.naturalWidth / userImg.naturalHeight;
-    let sw, sh;
-    if (imgAspect > 1) {
-        sh = baseSize;
-        sw = sh * imgAspect;
-    } else {
-        sw = baseSize;
-        sh = sw / imgAspect;
-    }
-
-    sw *= zoom;
-    sh *= zoom;
-
-    const sx = cx - sw / 2 + offsetX;
-    const sy = cy - sh / 2 + offsetY;
-
-    ctx.drawImage(userImg, sx, sy, sw, sh);
-    ctx.restore();
-
-    ctx.drawImage(frameImg, 0, 0, fw, fh);
-
-    const link = document.createElement('a');
-    link.download = 'agks-profile.png';
-    link.href = exportCanvas.toDataURL('image/png');
-    link.click();
+// Download
+downloadBtn.addEventListener('click', () => {
+  if (!userImage) return;
+  const link = document.createElement('a');
+  link.download = 'agks-profile.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 });
