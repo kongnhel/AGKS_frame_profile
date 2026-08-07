@@ -23,20 +23,35 @@ let startX, startY;
 
 frameImage.onload = () => draw();
 
+function openFile() {
+  uploadInput.click();
+}
+
 // Click overlay to upload
-canvasOverlay.addEventListener('click', () => fileInput.click());
+canvasOverlay.addEventListener('click', openFile);
 
 // Upload button
-uploadBtn.addEventListener('click', () => uploadInput.click());
+uploadBtn.addEventListener('click', openFile);
+
+// Drag and drop on canvas area
+const canvasWrap = document.querySelector('.canvas-wrap');
+canvasWrap.addEventListener('dragover', (e) => e.preventDefault());
+canvasWrap.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) loadFile(file);
+});
 
 uploadInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
 
+function loadFile(file) {
   const reader = new FileReader();
   reader.onload = (event) => {
-    userImage = new Image();
-    userImage.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      userImage = img;
       imgX = canvas.width / 2;
       imgY = canvas.height / 2;
       imgScale = canvas.width / Math.min(userImage.width, userImage.height);
@@ -46,66 +61,60 @@ uploadInput.addEventListener('change', (e) => {
       canvasOverlay.classList.add('hidden');
       sliderGroup.style.display = '';
       actionRow.style.display = '';
+      canvas.style.cursor = 'grab';
       draw();
     };
-    userImage.src = event.target.result;
+    img.src = event.target.result;
   };
   reader.readAsDataURL(file);
-});
+}
 
-// Drag
+// Mouse drag
 canvas.addEventListener('mousedown', (e) => {
   if (!userImage) return;
   isDragging = true;
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  startX = (e.clientX - rect.left) * scaleX - imgX;
-  startY = (e.clientY - rect.top) * scaleY - imgY;
+  startX = (e.clientX - rect.left) * (canvas.width / rect.width) - imgX;
+  startY = (e.clientY - rect.top) * (canvas.height / rect.height) - imgY;
   canvas.style.cursor = 'grabbing';
+  e.preventDefault();
 });
 
 canvas.addEventListener('mousemove', (e) => {
   if (!isDragging || !userImage) return;
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  imgX = (e.clientX - rect.left) * scaleX - startX;
-  imgY = (e.clientY - rect.top) * scaleY - startY;
+  imgX = (e.clientX - rect.left) * (canvas.width / rect.width) - startX;
+  imgY = (e.clientY - rect.top) * (canvas.height / rect.height) - startY;
   draw();
 });
 
 window.addEventListener('mouseup', () => {
   isDragging = false;
-  canvas.style.cursor = userImage ? 'grab' : 'move';
+  if (userImage) canvas.style.cursor = 'grab';
 });
 
-// Touch
+// Touch drag
 canvas.addEventListener('touchstart', (e) => {
-  if (!userImage) return;
+  if (!userImage || !e.touches.length) return;
   isDragging = true;
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
   const t = e.touches[0];
-  startX = (t.clientX - rect.left) * scaleX - imgX;
-  startY = (t.clientY - rect.top) * scaleY - imgY;
+  startX = (t.clientX - rect.left) * (canvas.width / rect.width) - imgX;
+  startY = (t.clientY - rect.top) * (canvas.height / rect.height) - imgY;
   e.preventDefault();
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
-  if (!isDragging || !userImage) return;
+  if (!isDragging || !userImage || !e.touches.length) return;
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
   const t = e.touches[0];
-  imgX = (t.clientX - rect.left) * scaleX - startX;
-  imgY = (t.clientY - rect.top) * scaleY - startY;
+  imgX = (t.clientX - rect.left) * (canvas.width / rect.width) - startX;
+  imgY = (t.clientY - rect.top) * (canvas.height / rect.height) - startY;
   draw();
   e.preventDefault();
 }, { passive: false });
 
-window.addEventListener('touchend', () => isDragging = false);
+window.addEventListener('touchend', () => { isDragging = false; });
 
 // Zoom
 zoomInput.addEventListener('input', (e) => {
@@ -141,6 +150,7 @@ resetBtn.addEventListener('click', () => {
   canvasOverlay.classList.remove('hidden');
   sliderGroup.style.display = 'none';
   actionRow.style.display = 'none';
+  canvas.style.cursor = 'move';
   uploadInput.value = '';
   draw();
 });
