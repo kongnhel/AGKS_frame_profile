@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AGKS Profile Frame</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+    <header>
+      <img class="logo" src="logo.png" alt="AGKS">
+      <h1>ដាក់រូបថតក្នុងស៊ុម</h1>
+    </header>
+
+    <div class="card">
+      <canvas id="canvas" width="800" height="800"></canvas>
+      <input type="file" id="upload" accept="image/*">
+    </div>
+
+    <label for="upload" class="upload-btn" id="uploadBtn">ជ្រើសរើសរូបថត</label>
+
+    <div class="controls" id="controls" style="display:none">
+      <div class="slider-wrap">
+        <input type="range" id="zoom" min="0.2" max="3" step="0.01" value="1">
+        <span id="zoomVal">100%</span>
+      </div>
+      <div class="btn-row">
+        <button id="downloadBtn" class="btn green">Download</button>
+        <button id="resetBtn" class="btn ghost">Reset</button>
+      </div>
+    </div>
+
+    <p class="hint" id="hint">រូបភាពនៅពីក្រោយស៊ុម · ទាញដើម្បីផ្លាស់ទី</p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
